@@ -1,6 +1,6 @@
 import volunteers from "./volunteers.json";
 
-const TWILIO_NUMBER = "+19204322600";
+const TWILIO_NUMBER = "+17153175060";
 
 export default {
   async fetch(request) {
@@ -25,7 +25,7 @@ function handleInitialMenu() {
 
   const body = `
     <Say voice="Polly.Joanna">
-      You have reached the District 5 AA hotline of Eau Claire and surrounding areas. Please listen closely as a list of volunteers will be provided. Volunteers all use their personal phones and may answer with a simple Hello. If they do not answer, please feel free to leave a voicemail with your name and phone number.
+      You have reached the District 7 AA hotline of Eau Claire and surrounding areas. Please listen closely as a list of volunteers will be provided. Volunteers all use their personal phones and may answer with a simple Hello. If they do not answer, please feel free to leave a voicemail with your name and phone number.
     </Say>
     <Pause length="1"/>
     <Gather numDigits="1" action="/connect" method="POST" timeout="10">
