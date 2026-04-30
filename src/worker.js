@@ -1,8 +1,6 @@
 import volunteers from "./volunteers.json";
 
 const TWILIO_NUMBER = "+19204322600";
-const GREETING_AUDIO_URL =
-  "https://d362unqrwzvzrb.cloudfront.net/hotline-greeting.wav";
 
 export default {
   async fetch(request) {
@@ -22,15 +20,17 @@ export default {
 };
 
 function handleInitialMenu() {
-  const gatherPrompt = buildMenuPrompt();
+  const menuPrompt = buildMenuPrompt();
   const maxDigit = String(volunteers.length);
 
   const body = `
-    <Play>${GREETING_AUDIO_URL}</Play>
+    <Say voice="Polly.Joanna">
+      You have reached the District 5 AA hotline of Eau Claire and surrounding areas. Please listen closely as a list of volunteers will be provided. Volunteers all use their personal phones and may answer with a simple Hello. If they do not answer, please feel free to leave a voicemail with your name and phone number.
+    </Say>
     <Pause length="1"/>
     <Gather numDigits="1" action="/connect" method="POST" timeout="10">
       <Say voice="Polly.Joanna">
-        ${gatherPrompt}
+        ${menuPrompt}
       </Say>
     </Gather>
     <Say voice="Polly.Joanna">
