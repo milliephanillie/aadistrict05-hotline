@@ -25,7 +25,7 @@ export default {
 function handleInitialMenu() {
   return twimlResponse(`
     <Gather numDigits="1" action="/selection" method="POST" timeout="5">
-      <Say voice="Polly.Joanna">For Spanish, press 1.</Say>
+      <Say voice="Polly.Lupe" language="es-US">Para español, oprima el uno.</Say>
     </Gather>
     ${buildAudioAndDial()}
   `);
@@ -34,7 +34,7 @@ function handleInitialMenu() {
 function handleSelection(digits) {
   if (digits === "1") {
     return twimlResponse(`
-      <Say voice="Polly.Joanna">Please hold while we connect you.</Say>
+      <Say voice="Polly.Lupe" language="es-US">Por favor espere mientras le conectamos.</Say>
       <Dial callerId="${TWILIO_NUMBER}" answerOnBridge="true" timeout="25">
         <Number>${SPANISH_PHONE}</Number>
       </Dial>
@@ -52,7 +52,6 @@ function buildAudioAndDial() {
     : `<Say voice="Polly.Joanna">There are no volunteers available at this time. Please call back later.</Say><Hangup/>`;
 
   return `
-    <Play>${ACTUAL_AUDIO_URL}</Play>
     ${dialVerb}
   `;
 }
