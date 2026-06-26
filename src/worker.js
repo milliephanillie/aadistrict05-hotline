@@ -3,7 +3,7 @@ import schedule from "./schedule.json";
 const CLOUDFRONT_URL = "d362unqrwzvzrb.cloudfront.net";
 const ACTUAL_AUDIO_URL = `https://${CLOUDFRONT_URL}/District+7+Hotline.wav`;
 const TWILIO_NUMBER = "+17153175060";
-const SPANISH_PHONE = "+10000000000"; // TODO: replace with actual Spanish volunteer number
+const SPANISH_PHONE = "+19205443345"; // TODO: replace with actual Spanish volunteer number
 
 export default {
   async fetch(request) {
@@ -36,7 +36,7 @@ function handleSelection(digits) {
     return twimlResponse(`
       <Say voice="Polly.Lupe" language="es-US">Por favor espere mientras le conectamos.</Say>
       <Dial callerId="${TWILIO_NUMBER}" answerOnBridge="true" timeout="25">
-        <Number>${SPANISH_PHONE}</Number>
+        <Number>${SPANISH_NUMBER}</Number>
       </Dial>
     `);
   }
