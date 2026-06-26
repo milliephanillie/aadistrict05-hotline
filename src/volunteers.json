@@ -1,5 +1,9 @@
 [
     {
+        "name": "Pepe P.",
+        "phone": "+19205443345"
+    },
+    {
         "name": "Margaret C.",
         "phone": "+17152183319"
     },
@@ -10,10 +14,6 @@
     {
         "name": "Kim S.",
         "phone": "+17156606699"
-    },
-    {
-        "name": "Pepe P.",
-        "phone": "+19205443345"
     },
     {
         "name": "Mike H.",
