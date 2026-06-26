@@ -24,7 +24,7 @@ export default {
 
 function handleInitialMenu() {
   return twimlResponse(`
-    <Gather numDigits="1" action="/selection" method="POST" timeout="5">
+    <Gather numDigits="1" action="/selection" method="POST" timeout="2">
       <Say voice="Polly.Lupe" language="es-US">Para español, oprima el uno.</Say>
     </Gather>
     ${buildAudioAndDial()}
@@ -52,6 +52,7 @@ function buildAudioAndDial() {
     : `<Say voice="Polly.Joanna">There are no volunteers available at this time. Please call back later.</Say><Hangup/>`;
 
   return `
+    <Play>${ACTUAL_AUDIO_URL}</Play>
     ${dialVerb}
   `;
 }
