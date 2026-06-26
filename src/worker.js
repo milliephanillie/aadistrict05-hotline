@@ -1,6 +1,9 @@
-import volunteers from "./volunteers.json";
+import schedule from "./schedule.json";
 
+const CLOUDFRONT_URL = "d362unqrwzvzrb.cloudfront.net";
+const ACTUAL_AUDIO_URL = `https://${CLOUDFRONT_URL}/District+7+Hotline.wav`;
 const TWILIO_NUMBER = "+17153175060";
+const SPANISH_PHONE = "+10000000000"; // TODO: replace with actual Spanish volunteer number
 
 export default {
   async fetch(request) {
@@ -11,8 +14,8 @@ export default {
     const params = new URLSearchParams(bodyText || "");
     const digits = params.get("Digits") || "";
 
-    if (pathname.endsWith("/connect")) {
-      return handleConnectSelection(digits);
+    if (pathname.endsWith("/selection")) {
+      return handleSelection(digits);
     }
 
     return handleInitialMenu();
@@ -20,72 +23,63 @@ export default {
 };
 
 function handleInitialMenu() {
-  const menuPrompt = buildMenuPrompt();
-  const maxDigit = String(volunteers.length);
-
-  const body = `
-    <Say voice="Polly.Joanna">
-      You have reached the District 7 AA hotline of Eau Claire and surrounding areas. Please listen closely as a list of volunteers will be provided. Volunteers all use their personal phones and may answer with a simple Hello. If they do not answer, please feel free to leave a voicemail with your name and phone number.
-    </Say>
-    <Pause length="1"/>
-    <Gather numDigits="1" action="/connect" method="POST" timeout="10">
-      <Say voice="Polly.Joanna">
-        ${menuPrompt}
-      </Say>
+  return twimlResponse(`
+    <Gather numDigits="1" action="/selection" method="POST" timeout="5">
+      <Say voice="Polly.Joanna">For Spanish, press 1.</Say>
     </Gather>
-    <Say voice="Polly.Joanna">
-      We did not receive a selection. Please call back and press a number from 1 to ${maxDigit}.
-    </Say>
-    <Hangup/>
+    ${buildAudioAndDial()}
+  `);
+}
+
+function handleSelection(digits) {
+  if (digits === "1") {
+    return twimlResponse(`
+      <Say voice="Polly.Joanna">Please hold while we connect you.</Say>
+      <Dial callerId="${TWILIO_NUMBER}" answerOnBridge="true" timeout="25">
+        <Number>${SPANISH_PHONE}</Number>
+      </Dial>
+    `);
+  }
+
+  return twimlResponse(buildAudioAndDial());
+}
+
+function buildAudioAndDial() {
+  const volunteer = getScheduledVolunteer();
+
+  const dialVerb = volunteer?.phone
+    ? `<Dial callerId="${TWILIO_NUMBER}" answerOnBridge="true" timeout="25"><Number>${volunteer.phone}</Number></Dial>`
+    : `<Say voice="Polly.Joanna">There are no volunteers available at this time. Please call back later.</Say><Hangup/>`;
+
+  return `
+    <Play>${ACTUAL_AUDIO_URL}</Play>
+    ${dialVerb}
   `;
-
-  return twimlResponse(body);
 }
 
-function handleConnectSelection(digits) {
-  const selectedNumber = Number.parseInt(digits, 10);
+function getScheduledVolunteer() {
+  const now = new Date();
+  const chicagoTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Chicago" }));
+  const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  const dayKey = dayNames[chicagoTime.getDay()];
+  const hour = chicagoTime.getHours();
 
-  if (!Number.isInteger(selectedNumber)) {
-    return invalidSelectionResponse();
-  }
+  // Slot 1 (index 0): midnight–5am  (0–4)
+  // Slot 2 (index 1): 5am–9am       (5–8)
+  // Slot 3 (index 2): 9am–1pm       (9–12)
+  // Slot 4 (index 3): 1pm–5pm       (13–16)
+  // Slot 5 (index 4): 5pm–midnight  (17–23)
+  let slotIndex;
+  if (hour < 5) slotIndex = 0;
+  else if (hour < 9) slotIndex = 1;
+  else if (hour < 13) slotIndex = 2;
+  else if (hour < 17) slotIndex = 3;
+  else slotIndex = 4;
 
-  const volunteer = volunteers[selectedNumber - 1];
+  const day = schedule.days.find(d => d.key === dayKey);
+  if (!day) return null;
 
-  if (!volunteer?.phone) {
-    return invalidSelectionResponse();
-  }
-
-  return twimlResponse(`
-    <Say voice="Polly.Joanna">
-      Connecting you now.
-    </Say>
-    <Dial callerId="${TWILIO_NUMBER}" answerOnBridge="true" timeout="25">
-      ${volunteer.phone}
-    </Dial>
-  `);
-}
-
-function invalidSelectionResponse() {
-  const maxDigit = String(volunteers.length);
-
-  return twimlResponse(`
-    <Say voice="Polly.Joanna">
-      That was not a valid selection. Please call back and press a number from 1 to ${maxDigit}.
-    </Say>
-    <Hangup/>
-  `);
-}
-
-function buildMenuPrompt() {
-  if (!volunteers.length) {
-    return "There are currently no volunteers configured. Please call back later.";
-  }
-
-  const options = volunteers
-    .map((volunteer, index) => `Press ${index + 1} for ${volunteer.name}.`)
-    .join(" ");
-
-  return `To choose a volunteer, ${options}`;
+  return day.callers[slotIndex] || null;
 }
 
 function twimlResponse(bodyXml) {
